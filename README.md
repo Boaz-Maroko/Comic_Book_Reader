@@ -14,3 +14,5 @@ Wait did you expect more?
 &#128514;
 
 Next time &#128075;
+
+P. S. To setup the project in a local environment checkout [setting up the project locally](./SETUP.md)
