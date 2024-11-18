@@ -90,4 +90,4 @@ To install the dependencies from the requirements.txt file.
 # Bravo
 You have successfully set up the project in you local machine. Remember not to distribute the project without my written concent. You can email me [here](mailto:boazmaroko123@gmail.com).
 
-![Enjoy](https://tenor.com/en-GB/view/enjoy-enjoy-your-day-have-a-great-day-gif-9556158992405963571)
+![Enjoy](https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbW9jMXFva3MxcDVnZWlkcm43MHV2dWJqaXIydGJiMXNkbXNrNWZ1dCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6vXNLzXdW4sbFRGo/giphy.gif)
