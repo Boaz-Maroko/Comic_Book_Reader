@@ -1,75 +1,112 @@
+import sys
 import os
-from tkinter import Label, filedialog, Button, Tk
-from PIL import Image, ImageTk
-from utils import Extraction
+import zipfile
+import rarfile
+from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsScene, QGraphicsView, QPushButton, QVBoxLayout, QWidget, QFileDialog, QMessageBox
+from PySide6.QtGui import QPixmap
+from PySide6.QtCore import Qt
 
-APP_PATH = '/home/boaz/code/projects/Comic_Reader/comic_book_reader'
+
+class ComicBookReader(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Comic Book Reader")
+        self.setGeometry(100, 100, 800, 600)
+
+        # UI components
+        self.scene = QGraphicsScene()
+        self.view = QGraphicsView(scene=self.scene)
+        self.open_button = QPushButton("Open Comic")
+        self.next_button = QPushButton("Next Page")
+        self.previous_button = QPushButton("Prev Page")
+
+        # Layout Components
+        layout = QVBoxLayout()
+        layout.addWidget(self.view)
+        layout.addWidget(self.open_button)
+        layout.addWidget(self.next_button)
+        layout.addWidget(self.previous_button)
 
 
-class ComicReader:
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
 
-    def __init__(self, root) -> None:
-        self.root = root
-        self.root.title("Comic Reader")
-        self.page_index = 0
+        # Variables
         self.images = []
+        self.current_page = 0
 
-        self.image_label = Label(root)
-        self.image_label.pack()
+        # Button Signals
+        self.open_button.clicked.connect(self.open_file_dialog) 
+        self.next_button.clicked.connect(self.next_page)
+        self.previous_button.clicked.connect(self.prev_page)
 
-        Button(root, text="Open Comic", command=self.open_comic).pack()
-        Button(root, text="Previous", command=self.prev_page).pack()
-        Button(root, text="Next", command=self.next_page).pack()
+    def open_file_dialog(self):
+        # Open file dialog to select a CBZ or CBR file
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Open Comic Book", "", "Comic Files (*.cbz *.cbr);;All Files (*)"
+        )
+        if file_path:
+            try:
+                self.open_comic(file_path)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to open comic: {e}")
 
-    def open_comic(self):
-        """Opens the comic book archive and reads the extension
-        if it is .cbz file it calls the load_comic method approprietly
-        """
-        file_path = filedialog.askopenfilename(filetypes=[("CBZ Files", "*.cbz"), ("CBR Files", "*.cbr"), ("All Files", "*.*")])
+    def open_comic(self, file_path: str) -> None:
         if file_path.endswith(".cbz"):
-            self.load_comic(file_path, is_cbz=True)
+            self.image_files = self.extract_cbz(file_path)
         elif file_path.endswith(".cbr"):
-            self.load_comic(file_path, is_cbz=False)
+            self.image_files = self.extract_cbr(file_path)
 
-    
-    def load_comic(self, file_path, is_cbz):
-        extract_to = "temp_comic"
-        os.makedirs(extract_to, exist_ok=True)
-
-        if is_cbz:
-            sub_folder = Extraction(file_path, extract_to).extract_cbz()
-        else:
-            Extraction(file_path, extract_to).extract_cbr()
-
-        self.images = sorted([os.path.join(f"{extract_to}/{sub_folder}", f) for f in os.listdir(f"{extract_to}/{sub_folder}")])
-        print(f"Indentified: {self.images}")
-        self.page_index = 0
+        self.current_page = 0
         self.display_page()
 
-    def display_page(self):
-        if 0 <= self.page_index < len(self.images):
-            image_path = self.images[self.page_index]
-            img = Image.open(image_path)
-            img.thumbnail((800, 600))
-            photo = ImageTk.PhotoImage(img)
+    def extract_cbz(self, file_path: str) -> list:
+        extracted_files = []
+        temp_dir = "temp_comic"
+        os.makedirs(temp_dir, exist_ok=True)
 
-            self.image_label.config(image=photo)
-            self.image_label.image = photo
+        with zipfile.ZipFile(file_path, 'r') as archive:
+            archive.extractall(temp_dir)
+            extracted_files = sorted([os.path.join(temp_dir, image_file) for image_file in archive.namelist() if image_file.lower().endswith(('png', 'jpeg', 'jpg'))])
+        
+        return extracted_files
+    
+    def extract_cbr(self, file_path: str) -> list[str]:
+        extracted_files = []
+        temp_dir = "temp_comic"
+        os.makedirs(temp_dir, exist_ok=True)
+
+        with rarfile.RarFile(file_path, "r") as archive:
+            archive.extractall(temp_dir)
+            extracted_files = sorted(
+                [os.path.join(temp_dir, f) for f in archive.namelist() if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            )
+        return extracted_files
+    
+    def display_page(self):
+        if 0 <= self.current_page < len(self.image_files):
+            image_path = self.image_files[self.current_page]
+            pixmap = QPixmap(image_path)
+            self.scene.clear()
+            self.scene.addPixmap(pixmap)
+            self.view.setScene(self.scene)
+            self.view.fitInView(self.scene.itemsBoundingRect(), Qt.KeepAspectRatio)
 
     def next_page(self):
-        if self.page_index < len(self.images) -1:
-            self.page_index += 1
+        if self.current_page < len(self.image_files) - 1:
+            self.current_page += 1
             self.display_page()
 
-
+                                     
     def prev_page(self):
-        if self.page_index > 0:
-            self.page_index -= 1
+        if self.current_page > 0:
+            self.current_page -= 1
             self.display_page()
-        
-if __name__== "__main__":
-    root = Tk()
-    app = ComicReader(root)
-    root.mainloop()
 
-                
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    reader = ComicBookReader()
+    reader.show()
+    sys.exit(app.exec())
