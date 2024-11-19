@@ -1,0 +1,38 @@
+# Byte-compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary files and directories
+temp_comic/
+*.tmp
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+venv/
+env/
+
+# pyinstaller build files
+dist/
+build/
+*.spec
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignore any files or directories starting with a dot
+.*
+!.gitignore
+
+# Ignore any files in comic book formart
+*.cbr
+*.cbz
+
+
