@@ -1,6 +1,0 @@
-EasyProcess==1.1
-entrypoint2==1.1
-patool==3.0.3
-pillow==11.0.0
-pyunpack==0.3
-tk==0.1.0
